@@ -4,7 +4,7 @@
 
 It's like match made in heaven!
 
-![In Action](atom-yeoman.gif)
+![In Action](https://github.com/david-driscoll/atom-yeoman/raw/master/atom-yeoman.gif)
 
 No longer do you have to leave the confines of your atom editor to scaffold your new view, or to create a new project.  (You still can if you prefer!!).
 
@@ -14,7 +14,7 @@ No longer do you have to leave the confines of your atom editor to scaffold your
 # Less task switching...
 Need to add a model or a controller?  Normally use a generator for that task?   You can run sub generators too...
 
-![In Action](atom-yeoman-sub.gif)
+![In Action](https://github.com/david-driscoll/atom-yeoman/raw/master/atom-yeoman-sub.gif)
 
 # Empowering Packages
 atom-yeoman lets package authors bundle one or more generators and execute them programmatically through the atom-yeoman framework.
