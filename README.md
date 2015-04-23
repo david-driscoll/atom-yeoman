@@ -4,9 +4,9 @@
 
 It's like match made in heaven!
 
+![In Action](atom-yeoman.gif)
 
 No longer do you have to leave the confines of your atom editor to scaffold your new view, or to create a new project.  (You still can if you prefer!!).
-
 
 # Current known issues
 * Only "list" and "text" question types are supported.  (More to come!)
