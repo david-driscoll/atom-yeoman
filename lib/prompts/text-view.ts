@@ -1,15 +1,13 @@
 import spacePen = require("atom-space-pen-views");
 import _ = require('lodash');
 
-class TextView extends spacePen.View {
-    private panel: Atom.Panel;
-    private miniEditor: spacePen.TextEditorView;
-    private message: JQuery;
+export class TextView extends spacePen.View {
+    protected panel: Atom.Panel;
+    protected miniEditor: spacePen.TextEditorView;
+    protected message: JQuery;
 
-    constructor(private question: Prompt.Text, private invokeNext: (result: any) => void) {
+    constructor(protected question: Prompt.Text, protected invokeNext: (result: any) => void) {
         super();
-        //this.buildGenerators();
-        //_model.onGeneratorsUpdated(() => this.buildGenerators());
     }
 
     public static content() {
@@ -71,4 +69,27 @@ class TextView extends spacePen.View {
         return null;
     }
 }
-export = TextView;
+
+export class ConfirmView extends TextView {
+    public show() {
+        if (this.panel == null) {
+            this.panel = atom.workspace.addModalPanel({ item: this });
+        }
+        this.message.text(this.question.message + ' ' + this.yesNo());
+
+        this.panel.show();
+        this.miniEditor.setText(this.question.default ? 'Y' : 'N');
+        this.miniEditor.focus();
+        var textEditor : Atom.TextEditor = <any>this.miniEditor.getModel();
+        textEditor.selectAll();
+    }
+
+    private yesNo() {
+        var question : Prompt.Confirm = <any>this.question;
+        if (question.default === true) {
+            return '(Y/n)';
+        } else {
+            return '(y/N)';
+        }
+    }
+}

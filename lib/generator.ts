@@ -1,4 +1,5 @@
 var loophole = require("loophole");
+// Loophole the loophole...
 loophole.Function.prototype = Function.prototype;
 var Environment = (function() {
     var path = require('path');
@@ -47,7 +48,7 @@ import _ = require('lodash');
 import path = require('path');
 import EventKit = require("event-kit");
 import GeneratorView = require("./generator-view");
-import TextView = require("./prompts/text-view");
+import TextViews = require("./prompts/text-view");
 
 class Generator {
     private _metadata: { [key: string]: { namespace: string; resolved: string; displayName: string; }; };
@@ -141,7 +142,7 @@ class Generator {
                 process.chdir(path);
                 if (this.checkForNamedGenerator(generators, generator)) {
                     var def = _.last(generator.split(':'))
-                    var view = new TextView({
+                    var view = new TextViews.TextView({
                         name: 'name',
                         type: undefined,
                         message: def + " name?",
@@ -165,22 +166,6 @@ class Generator {
             //    atom.open({ pathsToOpen: [path.join(this.path, this.adapter.answers['name'])] });
             //}
         });
-    }
-
-    private checkForNamedGenerator(generators: { displayName: string; name: string; resolved: string; }[], generator: string) {
-        var genny = _.find(generators, x => x.name == generator);
-        var underlyingGenerator = require(genny.resolved);
-        if (underlyingGenerator) {
-            while (underlyingGenerator) {
-                if (underlyingGenerator.name === "NamedBase")
-                    return true;
-                if (underlyingGenerator.toString().indexOf("NamedBase") > -1)
-                    return true;
-                underlyingGenerator = underlyingGenerator.super_;
-            }
-        }
-
-        return false;
     }
 
     private getPackagePath(resolved: string) {

@@ -10,11 +10,10 @@ class ListView extends spacePen.SelectListView {
     private previouslyFocusedElement: Node;
     private eventElement: any;
     private message: JQuery;
+    private list: JQuery;
 
     constructor(private question: Prompt.List, private invokeNext: (result: any) => void) {
         super();
-        //this.buildGenerators();
-        //_model.onGeneratorsUpdated(() => this.buildGenerators());
     }
 
     public static content() {
@@ -27,8 +26,6 @@ class ListView extends spacePen.SelectListView {
             (<any>spacePen.SelectListView).content.call(this);
         });
     }
-
-    public keyBindings = null;
 
     public initialize() {
         // TS 1.4 issue
@@ -69,6 +66,11 @@ class ListView extends spacePen.SelectListView {
         // infer the generator somehow? based on the project information?  store in the project system??
         this.setItems(this.question.choices);
         this.focusFilterEditor();
+
+        if (this.question.default) {
+            var selected = this.list.find('[data-event-name="'+this.question.default+'"]');
+            this.selectItemView(<any>selected);
+        }
     }
 
     public hide() {
@@ -76,7 +78,6 @@ class ListView extends spacePen.SelectListView {
     }
 
     public viewForItem(item: { name: string; value: string; }) {
-        var keyBindings = this.keyBindings;
         return spacePen.$$(function() {
             return this.li({
                 "class": 'event',
