@@ -10,15 +10,13 @@ import generatorService = require("./generator-service");
 class Yeoman {
     private emitter: EventKit.Emitter;
     private disposable: EventKit.CompositeDisposable;
-    private generator: Generator;
 
     public activate(state) {
         var view: GeneratorView;
         this.disposable = new EventKit.CompositeDisposable();
-        var generator = this.generator = new Generator('aspnet:');
         this.disposable.add(
             atom.commands.add('atom-workspace', 'yeoman:toggle', () => {
-                generator.start();
+                new Generator().start();
             }));
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
