@@ -1,7 +1,7 @@
 {
   "name": "atom-yeoman",
   "main": "./lib/atom-yeoman",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Yeoman Adapter for Atom.io",
   "repository": "https://github.com/atom/atom-yeoman",
   "license": "MIT",

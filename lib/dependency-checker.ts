@@ -7,20 +7,20 @@ var dependencyErrors = [];
 export function findAllDeps(packageDir) {
     dependencyErrors = [];
 
-    var packageFilePath = packageDir + "/omnisharp-atom/package.json";
+    var packageFilePath = packageDir + "/atom-yeoman/package.json";
     var packageConfig = JSON.parse(fs.readFileSync(packageFilePath, 'utf8'));
     var packageDependencies = packageConfig['apmPackageDependencies'];
     var availablePackageMetaData = atom.packages.getAvailablePackageMetadata();
 
-    _.each(packageDependencies, (version:string, packageName:string) => {
-        var matchingPackage : any = _.find(availablePackageMetaData, (availablePackage: any) => availablePackage.name == packageName);
+    _.each(packageDependencies, (version: string, packageName: string) => {
+        var matchingPackage: any = _.find(availablePackageMetaData, (availablePackage: any) => availablePackage.name == packageName);
 
         if (matchingPackage) {
             if (!semver.satisfies(matchingPackage.version, version)) {
-                dependencyErrors.push("Omnisharp Atom needs the package `"+packageName+"` (version "+version+") to be installed. You have an older version "+ matchingPackage.version +".");
+                dependencyErrors.push("Omnisharp Atom needs the package `" + packageName + "` (version " + version + ") to be installed. You have an older version " + matchingPackage.version + ".");
             }
         } else {
-            dependencyErrors.push("Omnisharp Atom needs the package `"+packageName+"` (version "+version+") to be installed");
+            dependencyErrors.push("Omnisharp Atom needs the package `" + packageName + "` (version " + version + ") to be installed");
         }
 
     });

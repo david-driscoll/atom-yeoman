@@ -21,7 +21,7 @@ var Environment = (function() {
         }
 
         return paths;
-    }
+    };
 
     function getAllConsumingPackages() {
         return _.filter(atom.packages.getLoadedPackages(), package => {
@@ -48,7 +48,7 @@ import GeneratorView = require("./generator-view");
 import TextView = require("./prompts/text-view");
 
 class Generator {
-    private _metadata: { [key: string]: { namespace: string; resolved: string; displayName: string; } };
+    private _metadata: { [key: string]: { namespace: string; resolved: string; displayName: string; }; };
     private env: any;
     private startPath = process.cwd();
     private adapter: AtomAdapter;

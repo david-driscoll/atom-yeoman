@@ -39,8 +39,8 @@ class Yeoman {
 
     public deactivate() {
         this.disposable.dispose();
-    };
+    }
 }
 
-var instance = new Yeoman
+var instance = new Yeoman;
 export = instance;

@@ -1,13 +1,17 @@
 import spacePen = require("atom-space-pen-views");
 import _ = require('lodash');
 
+// TS 1.4 issue (not in 1.5)
+declare var _super: any;
+declare var _this: any;
+
 class GeneratorView extends spacePen.SelectListView {
     private panel: Atom.Panel;
     private previouslyFocusedElement: Node;
     private eventElement: any;
     public message: JQuery;
 
-    constructor(private _items: { displayName: string, name:string }[], private invokeNext: (result: any) => void) {
+    constructor(private _items: { displayName: string; name: string; }[], private invokeNext: (result: any) => void) {
         super();
         //this.buildGenerators();
         //_model.onGeneratorsUpdated(() => this.buildGenerators());
@@ -19,14 +23,16 @@ class GeneratorView extends spacePen.SelectListView {
                 outlet: 'message'
             }, '');
 
-            super.content();
+            // TS 1.4 issue
+            (<any>spacePen.SelectListView).content.call(this);
         });
     }
 
     public keyBindings = null;
 
     public initialize() {
-        super.initialize();
+        // TS 1.4 issue
+        (<any>spacePen.SelectListView).prototype.initialize.call(this);
         this.addClass('generator');
     }
 
@@ -74,7 +80,7 @@ class GeneratorView extends spacePen.SelectListView {
         this.panel && this.panel.hide();
     }
 
-    public viewForItem(item :{ displayName: string, name:string }) {
+    public viewForItem(item: { displayName: string; name: string; }) {
         var keyBindings = this.keyBindings;
         return spacePen.$$(function() {
             return this.li({
@@ -88,7 +94,7 @@ class GeneratorView extends spacePen.SelectListView {
         });
     }
 
-    public confirmed(item?:any): spacePen.View {
+    public confirmed(item?: any): spacePen.View {
         this.cancel();
 
         if (this.invokeNext) {

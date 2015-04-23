@@ -1,6 +1,10 @@
 import spacePen = require("atom-space-pen-views");
 import _ = require('lodash');
 
+// TS 1.4 issue (not in 1.5)
+declare var _super: any;
+declare var _this: any;
+
 class ListView extends spacePen.SelectListView {
     private panel: Atom.Panel;
     private previouslyFocusedElement: Node;
@@ -19,14 +23,16 @@ class ListView extends spacePen.SelectListView {
                 outlet: 'message'
             }, '');
 
-            super.content();
+            // TS 1.4 issue
+            (<any>spacePen.SelectListView).content.call(this);
         });
     }
 
     public keyBindings = null;
 
     public initialize() {
-        super.initialize();
+        // TS 1.4 issue
+        (<any>spacePen.SelectListView).prototype.initialize.call(this);
         this.addClass('prompt');
     }
 
@@ -69,7 +75,7 @@ class ListView extends spacePen.SelectListView {
         this.panel && this.panel.hide();
     }
 
-    public viewForItem(item :{ name:string; value:string; }) {
+    public viewForItem(item: { name: string; value: string; }) {
         var keyBindings = this.keyBindings;
         return spacePen.$$(function() {
             return this.li({
@@ -83,7 +89,7 @@ class ListView extends spacePen.SelectListView {
         });
     }
 
-    public confirmed(item?:{ name:string; value:string; }): spacePen.View {
+    public confirmed(item?: { name: string; value: string; }): spacePen.View {
         this.cancel();
 
         if (this.invokeNext) {
