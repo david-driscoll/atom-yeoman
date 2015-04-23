@@ -34,6 +34,7 @@ class Generator {
     private env: any;
     private path: string;
     private startPath = process.cwd();
+    private adapter: AtomAdapter;
 
     public loaded = false;
 
@@ -69,13 +70,14 @@ class Generator {
 
     private loadEnvironment() {
         process.chdir(this.path);
-        this.env = Environment.createEnv(undefined, { cwd: this.path }, new AtomAdapter());
+        this.adapter = new AtomAdapter();
+        this.env = Environment.createEnv(undefined, { cwd: this.path }, this.adapter);
         this.getMetadata().then(metadata => {
             var generators = metadata
                 .map(z => ({
-                    displayName: z.namespace.replace(":app", "").replace(/:/g, ' '),
-                    name: z.namespace
-                }));
+                displayName: z.namespace.replace(":app", "").replace(/:/g, ' '),
+                name: z.namespace
+            }));
             var view = new GeneratorView(generators, (result) => this.run(result));
             view.message.text('Generator');
             view.toggle();
@@ -83,7 +85,15 @@ class Generator {
     }
 
     public run(generator: string) {
-        loophole.allowUnsafeNewFunction(() => this.env.run(generator, { cwd: this.path }, () => { process.chdir(this.startPath); }));
+        loophole.allowUnsafeNewFunction(() => {
+            var result = this.env.run(generator, { cwd: this.path }, () => {
+                process.chdir(this.startPath);
+                // TODO: Find out what directory was created and open a newinstance there.
+                //if (_.endsWith(generator, ":app")) {
+                //    atom.open({ pathsToOpen: [path.join(this.path, this.adapter.answers['name'])] });
+                //}
+            });
+        });
     }
 
     private getPackagePath(resolved: string) {

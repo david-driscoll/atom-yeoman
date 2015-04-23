@@ -6,10 +6,10 @@ var logger = require('./logger')
 class AtomAdapter {
     private questions: Prompt.Base[];
     private callback: (answers: any) => void;
-    private answers: { [key: string]: string; };
+    public answers: { [key: string]: string; } = {};
 
     public prompt(questions: Prompt.Base[], callback: (answers: any) => void) {
-        this.answers = {};
+        //this.answers = {};
         this.questions = questions.concat();
         this.callback = callback;
 
