@@ -11,6 +11,8 @@ var Environment = (function() {
         var paths: any[] = defaultGetNpmPaths.call(this);
         // drop the atom path
         paths.pop();
+
+        _.each(getAllConsumingPackages(), x => paths.push(x));
         // add the default path for the user.
         if (process.platform === 'win32') {
             paths.push(path.join(process.env.APPDATA, 'npm/node_modules'));
@@ -20,6 +22,21 @@ var Environment = (function() {
 
         return paths;
     }
+
+    function getAllConsumingPackages() {
+        return _.filter(atom.packages.getLoadedPackages(), package => {
+            var providedServices = package.metadata && package.metadata.providedServices;
+            if (providedServices && !!providedServices['yeoman-environment']) {
+                return true;
+            }
+
+            var consumedServices = package.metadata && package.metadata.consumedServices;
+            if (consumedServices && !!consumedServices['yeoman-environment']) {
+                return true;
+            }
+        }).map(z => path.join(z.path, 'node_modules'));
+    }
+
     return res;
 })();
 import AtomAdapter = require("./atom-adapter");
@@ -128,8 +145,8 @@ class Generator {
                         message: def + " name?",
                         default: def
                     }, (value) => {
-                        this.runGenerator(generator + ' ' + value, path);
-                    });
+                            this.runGenerator(generator + ' ' + value, path);
+                        });
                     view.show();
                 } else {
                     this.runGenerator(generator, path);

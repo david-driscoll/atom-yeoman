@@ -26,7 +26,10 @@ class Yeoman {
         }
     }
 
-    public generatorServiceV1 = new generatorService();
+    public generatorServiceV1() {
+        console.log('generatorServiceV1')
+        return new generatorService();
+    }
 
     public getPackageDir() {
         return _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
