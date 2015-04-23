@@ -33,6 +33,7 @@
         "./lib/atom-adapter.ts",
         "./lib/atom-yeoman.ts",
         "./lib/dependency-checker.ts",
+        "./lib/generator-service.ts",
         "./lib/generator-view.ts",
         "./lib/generator.ts",
         "./lib/logger.ts",

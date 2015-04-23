@@ -32,23 +32,31 @@ import GeneratorView = require("./generator-view");
 class Generator {
     private _metadata: { [key: string]: { namespace: string; resolved: string; displayName: string; } };
     private env: any;
-    private path: string;
     private startPath = process.cwd();
     private adapter: AtomAdapter;
+    public generators: Promise<{ displayName: string; name: string; }[]>;
 
     public loaded = false;
+
+    // Allow to limit the generator to a specific subset.
+    // aspnet:, jquery:, etc.
+    constructor(private prefix?: string, private path?: string) {
+
+    }
 
     public start() {
         this.selectPath();
     }
 
     private selectPath() {
-        var directories = atom.project.getDirectories();
+        var directories = atom.project.getDirectories().map(z => z.getPath());
         if (directories.length === 0) {
-            atom.pickFolder((directories: string[]) => {
-                atom.project.setPaths(directories);
-                this.selectPath();
-            });
+            // might be annoying...
+            //atom.pickFolder((directories: string[]) => {
+            //    atom.project.setPaths(directories);
+            //    this.selectPath();
+            //});
+            atom.notifications.addWarning("You must have a folder open!");
         } else if (directories.length > 1) {
             // select from list
             var dirs = directories.map(z => ({
@@ -63,30 +71,44 @@ class Generator {
             view.toggle();
         } else {
             // assume
-            this.path = directories[0].path;
-            this.loadEnvironment()
+            this.path = directories[0];
+            this.loadEnvironment().then((generators) => this.selectGenerator(generators));
         }
+    }
+
+    private selectGenerator(generators: { displayName: string; name: string; }[]) {
+        var view = new GeneratorView(generators, (result) => this.run(result, this.path));
+        view.message.text('Generator');
+        view.toggle();
     }
 
     private loadEnvironment() {
         process.chdir(this.path);
-        this.adapter = new AtomAdapter();
-        this.env = Environment.createEnv(undefined, { cwd: this.path }, this.adapter);
-        this.getMetadata().then(metadata => {
-            var generators = metadata
-                .map(z => ({
-                displayName: z.namespace.replace(":app", "").replace(/:/g, ' '),
-                name: z.namespace
-            }));
-            var view = new GeneratorView(generators, (result) => this.run(result));
-            view.message.text('Generator');
-            view.toggle();
-        });
+        if (!this.env) {
+            this.adapter = new AtomAdapter();
+            this.env = Environment.createEnv(undefined, { cwd: this.path }, this.adapter);
+            this.generators = this.getMetadata().then(metadata => {
+                var generators = metadata
+                    .map(z => ({
+                    displayName: z.namespace.replace(":app", "").replace(/:/g, ' '),
+                    name: z.namespace
+                }));
+
+                if (this.prefix) {
+                    generators = generators.filter(z => _.startsWith(z.name, this.prefix));
+                }
+
+                return generators;
+            });
+        }
+
+        return this.generators;
     }
 
-    public run(generator: string) {
+    public run(generator: string, path: string) {
         loophole.allowUnsafeNewFunction(() => {
-            var result = this.env.run(generator, { cwd: this.path }, () => {
+            process.chdir(path);
+            var result = this.env.run(generator, { cwd: path }, () => {
                 process.chdir(this.startPath);
                 // TODO: Find out what directory was created and open a newinstance there.
                 //if (_.endsWith(generator, ":app")) {
