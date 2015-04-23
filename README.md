@@ -11,6 +11,10 @@ No longer do you have to leave the confines of your atom editor to scaffold your
 # Current known issues
 * Only "list" and "text" question types are supported.  (More to come!)
 
+# Less task switching...
+Need to add a model or a controller?  Normally use a generator for that task?   You can run sub generators too...
+
+![In Action](atom-yeoman-sub.gif)
 
 # Empowering Packages
 atom-yeoman lets package authors bundle one or more generators and execute them programmatically through the atom-yeoman framework.
