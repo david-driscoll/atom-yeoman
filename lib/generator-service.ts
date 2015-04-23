@@ -1,16 +1,16 @@
 import Generator = require('./generator');
 
 class GeneratorService {
-    public start(prefix: string, path?: string) {
-        var genny = new Generator(prefix, path);
+    public start(prefix?: string, cwd?: string) {
+        var genny = new Generator(prefix, cwd);
 
         genny.start();
     }
 
-    public run(generator: string, path?: string) {
+    public run(generator: string, cwd?: string) {
         var genny = new Generator();
 
-        genny.run(generator, path);
+        genny.run(generator, cwd);
     }
 }
 
