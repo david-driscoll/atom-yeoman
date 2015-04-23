@@ -1,0 +1,44 @@
+{
+    "version": "1.4.1",
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false
+    },
+    "formatCodeOptions": {
+        "indentSize": 4,
+        "tabSize": 4,
+        "newLineCharacter": "\r\n",
+        "convertTabsToSpaces": true,
+        "insertSpaceAfterCommaDelimiter": true,
+        "insertSpaceAfterSemicolonInForStatements": true,
+        "insertSpaceBeforeAndAfterBinaryOperators": true,
+        "insertSpaceAfterKeywordsInControlFlowStatements": true,
+        "insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+        "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+        "placeOpenBraceOnNewLineForFunctions": false,
+        "placeOpenBraceOnNewLineForControlBlocks": false
+    },
+    "compileOnSave": false,
+    "filesGlob": [
+        "./**/*.ts",
+        "!./typings/**/*.d.ts",
+        "!./typingsTemp/**/*.d.ts",
+        "!./node_modules/**/*.ts"
+    ],
+    "files": [
+        "./lib/atom-adapter.ts",
+        "./lib/atom-yeoman.ts",
+        "./lib/dependency-checker.ts",
+        "./lib/generator-view.ts",
+        "./lib/generator.ts",
+        "./lib/logger.ts",
+        "./lib/prompts/list-view.ts",
+        "./lib/prompts/text-view.ts",
+        "./lib/prompts/typings.d.ts",
+        "./tsd.d.ts"
+    ]
+}
