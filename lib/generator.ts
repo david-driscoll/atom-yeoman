@@ -28,13 +28,14 @@ import _ = require('lodash');
 import path = require('path');
 import EventKit = require("event-kit");
 import GeneratorView = require("./generator-view");
+import TextView = require("./prompts/text-view");
 
 class Generator {
     private _metadata: { [key: string]: { namespace: string; resolved: string; displayName: string; } };
     private env: any;
     private startPath = process.cwd();
     private adapter: AtomAdapter;
-    public generators: Promise<{ displayName: string; name: string; }[]>;
+    public generators: Promise<{ displayName: string; name: string; resolved: string; }[]>;
 
     public loaded = false;
 
@@ -48,32 +49,35 @@ class Generator {
         this.selectPath();
     }
 
+    private getPath() {
+        return new Promise<string>((resolve, reject) => {
+            if (this.path)
+                return resolve(<any>this.path);
+
+            var directories = atom.project.getDirectories().map(z => z.getPath());
+            if (directories.length === 0) {
+                atom.notifications.addWarning("You must have a folder open!");
+                reject("You must have a folder open!");
+            } else if (directories.length > 1) {
+                // select from list
+                var dirs = directories.map(z => ({
+                    displayName: path.basename(path.dirname(z)),
+                    name: z
+                }));
+                var view = new GeneratorView(dirs, (result: string) => {
+                    resolve(<any>result);
+                });
+                view.message.text('Select Directory');
+                view.toggle();
+            } else {
+                // assume
+                resolve(<any>directories[0]);
+            }
+        });
+    }
+
     private selectPath() {
-        var directories = atom.project.getDirectories().map(z => z.getPath());
-        if (directories.length === 0) {
-            // might be annoying...
-            //atom.pickFolder((directories: string[]) => {
-            //    atom.project.setPaths(directories);
-            //    this.selectPath();
-            //});
-            atom.notifications.addWarning("You must have a folder open!");
-        } else if (directories.length > 1) {
-            // select from list
-            var dirs = directories.map(z => ({
-                displayName: path.basename(path.dirname(z)),
-                name: z
-            }));
-            var view = new GeneratorView(dirs, (result) => {
-                this.path = result;
-                this.loadEnvironment();
-            });
-            view.message.text('Select Project');
-            view.toggle();
-        } else {
-            // assume
-            this.path = directories[0];
-            this.loadEnvironment().then((generators) => this.selectGenerator(generators));
-        }
+        this.getPath().then((path) => this.loadEnvironment(path)).then((generators) => this.selectGenerator(generators));
     }
 
     private selectGenerator(generators: { displayName: string; name: string; }[]) {
@@ -82,16 +86,18 @@ class Generator {
         view.toggle();
     }
 
-    private loadEnvironment() {
-        process.chdir(this.path);
+    private loadEnvironment(path: string) {
         if (!this.env) {
+            process.chdir(path);
+            this.path = path;
             this.adapter = new AtomAdapter();
-            this.env = Environment.createEnv(undefined, { cwd: this.path }, this.adapter);
+            this.env = Environment.createEnv(undefined, { cwd: path }, this.adapter);
             this.generators = this.getMetadata().then(metadata => {
                 var generators = metadata
                     .map(z => ({
                     displayName: z.namespace.replace(":app", "").replace(/:/g, ' '),
-                    name: z.namespace
+                    name: z.namespace,
+                    resolved: z.resolved
                 }));
 
                 if (this.prefix) {
@@ -105,17 +111,57 @@ class Generator {
         return this.generators;
     }
 
-    public run(generator: string, path: string) {
-        loophole.allowUnsafeNewFunction(() => {
-            process.chdir(path);
-            var result = this.env.run(generator, { cwd: path }, () => {
-                process.chdir(this.startPath);
-                // TODO: Find out what directory was created and open a newinstance there.
-                //if (_.endsWith(generator, ":app")) {
-                //    atom.open({ pathsToOpen: [path.join(this.path, this.adapter.answers['name'])] });
-                //}
+    public run(generator: string, path?: string) {
+        if (!path) {
+            this.getPath().then(p => this.run(generator, p));
+            return;
+        }
+
+        this.loadEnvironment(path).then((generators) => {
+            loophole.allowUnsafeNewFunction(() => {
+                process.chdir(path);
+                if (this.checkForNamedGenerator(generators, generator)) {
+                    var def = _.last(generator.split(':'))
+                    var view = new TextView({
+                        name: 'name',
+                        type: undefined,
+                        message: def + " name?",
+                        default: def
+                    }, (value) => {
+                        this.runGenerator(generator + ' ' + value, path);
+                    });
+                    view.show();
+                } else {
+                    this.runGenerator(generator, path);
+                }
             });
+        })
+    }
+
+    private runGenerator(args: string, path: string) {
+        var result = this.env.run(args, { cwd: path }, () => {
+            process.chdir(this.startPath);
+            // TODO: Find out what directory was created and open a newinstance there.
+            //if (_.endsWith(generator, ":app")) {
+            //    atom.open({ pathsToOpen: [path.join(this.path, this.adapter.answers['name'])] });
+            //}
         });
+    }
+
+    private checkForNamedGenerator(generators: { displayName: string; name: string; resolved: string; }[], generator: string) {
+        var genny = _.find(generators, x => x.name == generator);
+        var underlyingGenerator = require(genny.resolved);
+        if (underlyingGenerator) {
+            while (underlyingGenerator) {
+                if (underlyingGenerator.name === "NamedBase")
+                    return true;
+                if (underlyingGenerator.toString().indexOf("NamedBase") > -1)
+                    return true;
+                underlyingGenerator = underlyingGenerator.super_;
+            }
+        }
+
+        return false;
     }
 
     private getPackagePath(resolved: string) {
