@@ -1,4 +1,5 @@
 var loophole = require("loophole");
+loophole.Function.prototype = Function.prototype;
 var Environment = (function() {
     var path = require('path');
 
