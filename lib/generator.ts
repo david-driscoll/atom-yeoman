@@ -18,6 +18,7 @@ var Environment = (function() {
             paths.push(path.join(process.env.APPDATA, 'npm/node_modules'));
         } else {
             paths.push('/usr/lib/node_modules');
+            paths.push('/usr/local/lib/node_modules/');
         }
 
         return paths;
