@@ -76,9 +76,9 @@ class CheckboxView extends spacePen.View {
                 "class": 'event checkbox',
                 'data-event-name': item.value
             }, () => {
-                    this.input({ type: "checkbox", value: "true" });
+                    this.input({ type: "checkbox", style: "margin-left: 0;", checked: !!item.checked, value: item.value });
                     return this.span(item.name, {
-                        title: item.name
+                        title: item.name, style: "padding-left: 6px;"
                     });
                 });
         });
@@ -88,7 +88,7 @@ class CheckboxView extends spacePen.View {
         this.cancel();
 
         if (this.invokeNext) {
-            this.invokeNext(item.value);
+            this.invokeNext(item);
         }
 
         return null;
@@ -176,6 +176,7 @@ class CheckboxView extends spacePen.View {
 
     public cancel() {
         this.list.empty();
+        this.hide();
         return clearTimeout(this.scheduleTimeout);
     }
 
@@ -210,6 +211,7 @@ class CheckboxView extends spacePen.View {
             if (e.which === 32) {
                 this.selectCheckbox(this.getSelectedItemView());
                 e.preventDefault();
+                return false;
             }
         })
 
@@ -217,24 +219,34 @@ class CheckboxView extends spacePen.View {
 
         this.disposable.add(atom.commands.add(document.body, 'core:move-up', (event) => {
             this.selectPreviousItemView();
-            return event.stopPropagation();
+            event.stopPropagation();
         }));
 
         this.disposable.add(atom.commands.add(document.body, 'core:move-down', (event) => {
             this.selectNextItemView();
-            return event.stopPropagation();
+            event.stopPropagation();
         }));
 
         this.disposable.add(atom.commands.add(document.body, 'core:move-to-top', (event) => {
             this.selectItemView(this.list.find('li:first'));
             this.list.scrollToTop();
-            return event.stopPropagation();
+            event.stopPropagation();
         }));
 
         this.disposable.add(atom.commands.add(document.body, 'core:move-to-bottom', (event) => {
             this.selectItemView(this.list.find('li:last'));
             this.list.scrollToBottom();
-            return event.stopPropagation();
+            event.stopPropagation();
+        }));
+
+        this.disposable.add(atom.commands.add(document.body, 'core:confirm', (event) => {
+            this.confirmSelection();
+            event.stopPropagation();
+        }));
+
+        this.disposable.add(atom.commands.add(document.body, 'core:cancel', (event) => {
+            this.cancel();
+            event.stopPropagation();
         }));
 
         this.list.on('mousedown', (arg) => {
@@ -250,13 +262,11 @@ class CheckboxView extends spacePen.View {
             return false;
         });
 
-        /*return this.list.on('mouseup', 'li', (e) => {
-            if ($(e.target).closest('li').hasClass('selected')) {
-                this.confirmSelection();
-            }
+        this.list.on('mouseup', 'li', (e) => {
+            this.selectCheckbox(this.getSelectedItemView());
             e.preventDefault();
             return false;
-        });*/
+        });
     }
 
     public hide() {
@@ -264,7 +274,7 @@ class CheckboxView extends spacePen.View {
         this.panel && this.panel.hide();
         this.panel.destroy();
         this.panel = null;
-        $(document).off('keyup.checkbox-view')
+        $(document).off('keyup.checkbox-view');
     }
 
 
@@ -304,6 +314,7 @@ class CheckboxView extends spacePen.View {
         }
 
         var input = <HTMLInputElement>view.find('input')[0];
+        if (!input.disabled)
         input.checked = !input.checked;
     }
 
@@ -323,10 +334,9 @@ class CheckboxView extends spacePen.View {
     }
 
     public confirmSelection() {
-        var item;
-        item = this.getSelectedItem();
-        if (item != null) {
-            return this.confirmed(item);
+        var items = _.filter(this.list.find('input'), x => x.checked).map(z => z.value);
+        if (items) {
+            return this.confirmed(items.join(','));
         } else {
             return this.cancel();
         }

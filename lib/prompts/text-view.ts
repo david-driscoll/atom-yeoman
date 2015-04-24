@@ -51,6 +51,8 @@ export class TextView extends spacePen.View {
 
     public hide() {
         this.panel && this.panel.hide();
+        this.panel.destroy();
+        this.panel = null;
     }
 
     public cancel() {

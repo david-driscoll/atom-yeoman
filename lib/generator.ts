@@ -7,10 +7,11 @@ var Environment = (function() {
     var res;
     loophole.allowUnsafeNewFunction(() => res = require('yeoman-environment'));
     var defaultGetNpmPaths = res.prototype.getNpmPaths;
+    var defaultCreate = res.prototype.create;
 
     res.prototype.getNpmPaths = function() {
         // we're in atom... which is not node... if installed locally.
-        var paths: any[] = defaultGetNpmPaths.call(this);
+        var paths: any[] = defaultGetNpmPaths.apply(this, arguments);
         // drop the atom path
         paths.pop();
 
@@ -24,6 +25,12 @@ var Environment = (function() {
         }
 
         return paths;
+    };
+
+    res.prototype.create = function() {
+        var result, args = arguments;
+        loophole.allowUnsafeNewFunction(() => result = defaultCreate.apply(this, args));
+        return result;
     };
 
     function getAllConsumingPackages() {
@@ -140,31 +147,37 @@ class Generator {
         this.loadEnvironment(path).then((generators) => {
             loophole.allowUnsafeNewFunction(() => {
                 process.chdir(path);
-                if (this.checkForNamedGenerator(generators, generator)) {
-                    var def = _.last(generator.split(':'))
-                    var view = new TextViews.TextView({
-                        name: 'name',
-                        type: undefined,
-                        message: def + " name?",
-                        default: def
-                    }, (value) => {
-                            this.runGenerator(generator + ' ' + value, path);
-                        });
-                    view.show();
-                } else {
+                try {
                     this.runGenerator(generator, path);
+                } catch (error) {
+                    // Tried to do class detection... that was unreliable across all use cases.
+                    // this isn't the best, but it works.
+                    if (error.message === "Did not provide required argument name!") {
+                        var def = _.last(generator.split(':'))
+                        var view = new TextViews.TextView({
+                            name: 'name',
+                            type: undefined,
+                            message: def + " name?",
+                            default: def
+                        }, (value) => {
+                                this.runGenerator(generator + ' ' + value, path);
+                            });
+                        view.show();
+                    }
                 }
             });
         })
     }
 
     private runGenerator(args: string, path: string) {
-        var result = this.env.run(args, { cwd: path }, () => {
-            process.chdir(this.startPath);
-            // TODO: Find out what directory was created and open a newinstance there.
-            //if (_.endsWith(generator, ":app")) {
-            //    atom.open({ pathsToOpen: [path.join(this.path, this.adapter.answers['name'])] });
-            //}
+        loophole.allowUnsafeNewFunction(() => {
+            var genny = this.env.run(args, { cwd: path }, () => {
+                process.chdir(this.startPath);
+                // TODO: Find out what directory was created and open a newinstance there.
+                //if (_.endsWith(generator, ":app")) {
+                //    atom.open({ pathsToOpen: [path.join(this.path, this.adapter.answers['name'])] });
+                //}
+            });
         });
     }
 

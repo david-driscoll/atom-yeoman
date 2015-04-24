@@ -78,6 +78,8 @@ class GeneratorView extends spacePen.SelectListView {
 
     public hide() {
         this.panel && this.panel.hide();
+        this.panel.destroy();
+        this.panel = null;
     }
 
     public viewForItem(item: { displayName: string; name: string; }) {
