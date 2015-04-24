@@ -29,6 +29,14 @@ var Environment = (function() {
 
     res.prototype.create = function() {
         var result, args = arguments;
+        var options = arguments[1];
+        if (options) {
+            if (options.options && !options.options.cwd) {
+                options.options.cwd = this.cwd;
+            } else if (!options.options && !options.cwd) {
+                options.cwd = this.cwd;
+            }
+        }
         loophole.allowUnsafeNewFunction(() => result = defaultCreate.apply(this, args));
         return result;
     };
