@@ -79,7 +79,7 @@ class Generator {
             } else if (directories.length > 1) {
                 // select from list
                 var dirs = directories.map(z => ({
-                    displayName: path.basename(path.dirname(z)),
+                    displayName: path.basename(z),
                     name: z
                 }));
                 var view = new GeneratorView(dirs, (result: string) => {
