@@ -1,5 +1,5 @@
 import spacePen = require("atom-space-pen-views");
-import _ = require('lodash');
+import _ = require('../lodash');
 import $ = require('jquery');
 import EventKit = require("event-kit");
 

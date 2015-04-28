@@ -3,7 +3,7 @@
 
 import util = require('util');
 import events = require('events');
-import _ = require('lodash');
+import _ = require('./lodash');
 //var table = require('text-table');
 //var chalk = require('chalk');
 //var logSymbols = require('log-symbols');

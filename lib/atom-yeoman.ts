@@ -1,4 +1,4 @@
-import _ = require('lodash')
+import _ = require('./lodash');
 import fs = require('fs')
 import EventKit = require("event-kit");
 

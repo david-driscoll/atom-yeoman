@@ -1,5 +1,5 @@
 import spacePen = require("atom-space-pen-views");
-import _ = require('lodash');
+import _ = require('./lodash');
 
 // TS 1.4 issue (not in 1.5)
 declare var _super: any;

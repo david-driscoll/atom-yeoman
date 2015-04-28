@@ -5,7 +5,10 @@ var Environment = (function() {
     var path = require('path');
 
     var res;
-    loophole.allowUnsafeNewFunction(() => res = require('yeoman-environment'));
+    loophole.allowUnsafeNewFunction(() => {
+        res = require('yeoman-environment');
+        require('yeoman-generator');
+    });
     var defaultGetNpmPaths = res.prototype.getNpmPaths;
     var defaultCreate = res.prototype.create;
 
@@ -57,9 +60,9 @@ var Environment = (function() {
 
     return res;
 })();
+import _ = require('./lodash');
 import AtomAdapter = require("./atom-adapter");
 import Promise = require("bluebird");
-import _ = require('lodash');
 import path = require('path');
 import EventKit = require("event-kit");
 import GeneratorView = require("./generator-view");

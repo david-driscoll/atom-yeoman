@@ -1,5 +1,5 @@
 import spacePen = require("atom-space-pen-views");
-import _ = require('lodash');
+import _ = require('../lodash');
 
 export class TextView extends spacePen.View {
     protected panel: Atom.Panel;

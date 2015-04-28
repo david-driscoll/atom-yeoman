@@ -1,7 +1,7 @@
 import ListView = require('./prompts/list-view');
 import TextViews = require('./prompts/text-view');
 import CheckboxView = require("./prompts/checkbox-view");
-import _ = require('lodash');
+import _ = require('./lodash');
 var logger = require('./logger')
 
 class AtomAdapter {

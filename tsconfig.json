@@ -35,6 +35,7 @@
         "./lib/generator-service.ts",
         "./lib/generator-view.ts",
         "./lib/generator.ts",
+        "./lib/lodash.ts",
         "./lib/logger.ts",
         "./lib/prompts/checkbox-view.ts",
         "./lib/prompts/list-view.ts",
