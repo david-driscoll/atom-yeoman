@@ -120,7 +120,9 @@ class Generator {
             if (this.path)
                 return resolve(<any>this.path);
 
-            var directories = atom.project.getDirectories().map(z => z.getPath());
+            var selectedTreeViewDirectory = [ this.getTreeViewDirectory() ];
+
+            var directories = selectedTreeViewDirectory.concat(atom.project.getDirectories().map(z => z.getPath()));
             if (directories.length === 0) {
                 atom.notifications.addWarning("You must have a folder open!");
                 reject("You must have a folder open!");
@@ -139,6 +141,25 @@ class Generator {
                 // assume
                 resolve(<any>directories[0]);
             }
+        });
+    }
+
+    private getTreeViewDirectory() {
+        var treeView = this.getTreeView();
+        if (treeView === null) return;
+
+        if (path.extname(treeView[0].item.selectedPath) !== "")
+            return path.dirname(treeView[0].item.selectedPath);
+
+        return treeView[0].item.selectedPath;
+    }
+
+    // Holy hell this is hacky. Is there a better way to get the TreeView?
+    private getTreeView() {
+        var panels = atom.workspace.getTopPanels().concat(atom.workspace.getLeftPanels()).concat(atom.workspace.getBottomPanels()).concat(atom.workspace.getRightPanels());
+
+        return panels.filter(function (d) {
+            return d.item.selectedPath;
         });
     }
 
