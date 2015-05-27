@@ -1,10 +1,12 @@
 import spacePen = require("atom-space-pen-views");
+import EventKit = require('event-kit');
 import _ = require('../lodash');
 
 export class TextView extends spacePen.View {
     protected panel: Atom.Panel;
     protected miniEditor: spacePen.TextEditorView;
     protected message: JQuery;
+    protected disposable: EventKit.CompositeDisposable;
 
     constructor(protected question: Prompt.Text, protected invokeNext: (result: any) => void) {
         super();
@@ -24,8 +26,6 @@ export class TextView extends spacePen.View {
 
     public initialize() {
         this.addClass('prompt');
-        this.on('core:confirm', () => this.confirmed());
-        this.on('core:cancel', () => this.cancel());
     }
 
     public toggle() {
@@ -37,6 +37,10 @@ export class TextView extends spacePen.View {
     }
 
     public show() {
+        this.disposable = new EventKit.CompositeDisposable();
+        this.disposable.add(atom.commands.add(document.body, 'core:confirm', () => this.confirmed()));
+        this.disposable.add(atom.commands.add(document.body, 'core:cancel', () => this.cancel()));
+
         if (this.panel == null) {
             this.panel = atom.workspace.addModalPanel({ item: this });
         }
@@ -59,10 +63,10 @@ export class TextView extends spacePen.View {
         var filterEditorViewFocused = this.miniEditor.hasFocus();
         this.miniEditor.setText('');
         this.hide();
+        this.disposable.dispose();
     }
 
     public confirmed() {
-
         if (this.invokeNext) {
             this.invokeNext(this.miniEditor.getText());
         }
@@ -74,6 +78,10 @@ export class TextView extends spacePen.View {
 
 export class ConfirmView extends TextView {
     public show() {
+        this.disposable = new EventKit.CompositeDisposable();
+        this.disposable.add(atom.commands.add(document.body, 'core:confirm', () => this.confirmed()));
+        this.disposable.add(atom.commands.add(document.body, 'core:cancel', () => this.cancel()));
+
         if (this.panel == null) {
             this.panel = atom.workspace.addModalPanel({ item: this });
         }
