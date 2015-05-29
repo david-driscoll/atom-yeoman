@@ -2,9 +2,8 @@ import _ = require('./lodash');
 import fs = require('fs')
 import EventKit = require("event-kit");
 
-import Generator = require("./generator");
+var Generator;
 import GeneratorView = require("./generator-view");
-import generatorService = require("./generator-service");
 
 class Yeoman {
     private emitter: EventKit.Emitter;
@@ -15,19 +14,9 @@ class Yeoman {
         this.disposable = new EventKit.CompositeDisposable();
         this.disposable.add(
             atom.commands.add('atom-workspace', 'yo:yeoman', () => {
-                new Generator().start();
+                if (!Generator) Generator = require("./generator");
+                _.defer(() => new Generator().start());
             }));
-    }
-
-    public generatorServiceV1() {
-        console.log('generatorServiceV1')
-        return new generatorService();
-    }
-
-    public getPackageDir() {
-        return _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
-            return fs.existsSync(packagePath + "/atom-yeoman");
-        });
     }
 
     public deactivate() {

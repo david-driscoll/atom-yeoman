@@ -60,6 +60,7 @@ var Environment = (function() {
 
     return res;
 })();
+
 import _ = require('./lodash');
 import AtomAdapter = require("./atom-adapter");
 import Promise = require("bluebird");

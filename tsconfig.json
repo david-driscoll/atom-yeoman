@@ -22,7 +22,7 @@
         "placeOpenBraceOnNewLineForFunctions": false,
         "placeOpenBraceOnNewLineForControlBlocks": false
     },
-    "compileOnSave": false,
+    "compileOnSave": true,
     "filesGlob": [
         "./**/*.ts",
         "!./typings/**/*.d.ts",
@@ -32,6 +32,7 @@
     "files": [
         "./lib/atom-adapter.ts",
         "./lib/atom-yeoman.ts",
+        "./lib/bootstrapper.ts",
         "./lib/generator-service.ts",
         "./lib/generator-view.ts",
         "./lib/generator.ts",

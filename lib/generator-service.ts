@@ -1,16 +1,14 @@
-import Generator = require('./generator');
+var Generator;
 
 class GeneratorService {
     public start(prefix?: string, cwd?: string) {
-        var genny = new Generator(prefix, cwd);
-
-        genny.start();
+        if (!Generator) Generator = require('./generator');
+        _.defer(() => new Generator(prefix, cwd).start());
     }
 
     public run(generator: string, cwd?: string) {
-        var genny = new Generator();
-
-        genny.run(generator, cwd);
+        if (!Generator) Generator = require('./generator');
+        _.defer(() => new Generator().run(generator, cwd));
     }
 }
 
