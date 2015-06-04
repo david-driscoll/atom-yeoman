@@ -1,14 +1,53 @@
+import _ = require('./lodash');
+import path = require('path');
+import fs = require('fs');
 var loophole = require("loophole");
 // Loophole the loophole...
 loophole.Function.prototype = Function.prototype;
 var Environment = (function() {
     var path = require('path');
 
+    var referencingPackages = _(atom.packages.getLoadedPackages()).filter(package => {
+        var providedServices = package.metadata && package.metadata.providedServices;
+        if (providedServices && !!providedServices['yeoman-environment']) {
+            return true;
+        }
+
+        var consumedServices = package.metadata && package.metadata.consumedServices;
+        if (consumedServices && !!consumedServices['yeoman-environment']) {
+            return true;
+        }
+    }).value();
+
+    // Dirty hack
+    // Replace any references to lodash (in referencing packages only)
+    // without safe lodash version.
+    _.map(referencingPackages, package => {
+        var packagePath = package.path;
+        if (fs.lstatSync(packagePath)) {
+            packagePath = fs.readlinkSync(packagePath);
+        }
+
+        var paths = [
+            path.join(packagePath, 'node_modules/lodash/index.js'),
+            path.join(packagePath, 'node_modules/dist/lodash.js')
+        ];
+
+        _.each(paths, path => {
+            var m = require.cache[path];
+            if (require.cache[path]) {
+                m.exports.template = _.template;
+                //m.exports = _;
+            }
+        })
+    });
+
     var res;
     loophole.allowUnsafeNewFunction(() => {
         res = require('yeoman-environment');
         require('yeoman-generator');
     });
+
     var defaultGetNpmPaths = res.prototype.getNpmPaths;
     var defaultCreate = res.prototype.create;
 
@@ -45,26 +84,14 @@ var Environment = (function() {
     };
 
     function getAllConsumingPackages() {
-        return _.filter(atom.packages.getLoadedPackages(), package => {
-            var providedServices = package.metadata && package.metadata.providedServices;
-            if (providedServices && !!providedServices['yeoman-environment']) {
-                return true;
-            }
-
-            var consumedServices = package.metadata && package.metadata.consumedServices;
-            if (consumedServices && !!consumedServices['yeoman-environment']) {
-                return true;
-            }
-        }).map(z => path.join(z.path, 'node_modules'));
+        return referencingPackages.map(z => path.join(z.path, 'node_modules'));
     }
 
     return res;
 })();
 
-import _ = require('./lodash');
 import AtomAdapter = require("./atom-adapter");
 import Promise = require("bluebird");
-import path = require('path');
 import EventKit = require("event-kit");
 import GeneratorView = require("./generator-view");
 import TextViews = require("./prompts/text-view");

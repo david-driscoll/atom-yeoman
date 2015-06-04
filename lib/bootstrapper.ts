@@ -1,3 +1,4 @@
+import _ = require('./lodash');
 var generatorService;
 var atomYeoman;
 

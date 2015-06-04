@@ -7,7 +7,7 @@ loophole.Function.prototype = Function.prototype;
 global.Function = loophole.Function;
 var _: _.LoDashStatic = (function() {
     var res;
-    loophole.allowUnsafeNewFunction(() => res = require('lodash'))
+    loophole.allowUnsafeNewFunction(() => res = require('lodash'));
     return res;
 })();
 export = _;
