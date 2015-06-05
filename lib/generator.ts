@@ -1,5 +1,5 @@
 import _ = require('./lodash');
-import path = require('path');
+import {join, relative, extname, dirname, sep} from 'path';
 import fs = require('fs');
 var loophole = require("loophole");
 // Loophole the loophole...
@@ -29,8 +29,8 @@ var Environment = (function() {
         }
 
         var paths = [
-            path.join(packagePath, 'node_modules/lodash/index.js'),
-            path.join(packagePath, 'node_modules/dist/lodash.js')
+            join(packagePath, 'node_modules/lodash/index.js'),
+            join(packagePath, 'node_modules/dist/lodash.js')
         ];
 
         _.each(paths, path => {
@@ -96,6 +96,8 @@ import EventKit = require("event-kit");
 import GeneratorView = require("./generator-view");
 import TextViews = require("./prompts/text-view");
 
+interface IOptions { promptOnZeroDirectories?: boolean }
+
 class Generator {
     private _metadata: { [key: string]: { namespace: string; resolved: string; displayName: string; }; };
     private env: any;
@@ -107,7 +109,7 @@ class Generator {
 
     // Allow to limit the generator to a specific subset.
     // aspnet:, jquery:, etc.
-    constructor(private prefix?: string, private path?: string) {
+    constructor(private prefix?: string, private path?: string, private options: IOptions = {}) {
 
     }
 
@@ -115,21 +117,39 @@ class Generator {
         this.selectPath();
     }
 
-    private getPath() {
+    private static getPath(p: string, options: IOptions) {
         return new Promise<string>((resolve, reject) => {
-            if (this.path)
-                return resolve(<any>this.path);
+            if (p) return resolve(<any>p);
 
-            var selectedTreeViewDirectory = [ this.getTreeViewDirectory() ];
 
-            var directories = selectedTreeViewDirectory.concat(atom.project.getDirectories().map(z => z.getPath()));
+            var directories = [];
+            var selectedTreeViewDirectory = this.getTreeViewDirectory();
+            if (selectedTreeViewDirectory)
+                directories.push(selectedTreeViewDirectory);
+
+            var projectPaths = atom.project.getDirectories().map(z => z.getPath());
+            directories = _.unique(directories.concat(projectPaths));
+
             if (directories.length === 0) {
-                atom.notifications.addWarning("You must have a folder open!");
-                reject("You must have a folder open!");
+                if (options.promptOnZeroDirectories) {
+                    atom.pickFolder((directories: string[]) => {
+                        atom.project.setPaths(directories);
+                        resolve(<any>directories[0]);
+                    });
+                } else {
+                    atom.notifications.addWarning("You must have a folder open!");
+                    reject("You must have a folder open!");
+                }
             } else if (directories.length > 1) {
+
+                function getRelativePath(path) {
+                    var basePath = _.find(projectPaths, projectPath => _.startsWith(path, projectPath));
+                    return relative(dirname(basePath), path);
+                }
+
                 // select from list
                 var dirs = directories.map(z => ({
-                    displayName: path.basename(z),
+                    displayName: getRelativePath(z),
                     name: z
                 }));
                 var view = new GeneratorView(dirs, (result: string) => {
@@ -144,27 +164,27 @@ class Generator {
         });
     }
 
-    private getTreeViewDirectory() {
+    private static getTreeViewDirectory() {
         var treeView = this.getTreeView();
-        if (treeView === null) return;
+        if (treeView === null || !treeView.length) return;
 
-        if (path.extname(treeView[0].item.selectedPath) !== "")
-            return path.dirname(treeView[0].item.selectedPath);
+        if (extname(treeView[0].item.selectedPath) !== "")
+            return dirname(treeView[0].item.selectedPath);
 
         return treeView[0].item.selectedPath;
     }
 
     // Holy hell this is hacky. Is there a better way to get the TreeView?
-    private getTreeView() {
+    private static getTreeView() {
         var panels = atom.workspace.getTopPanels().concat(atom.workspace.getLeftPanels()).concat(atom.workspace.getBottomPanels()).concat(atom.workspace.getRightPanels());
 
-        return panels.filter(function (d) {
+        return panels.filter(function(d) {
             return d.item.selectedPath;
         });
     }
 
     private selectPath() {
-        this.getPath().then((path) => this.loadEnvironment(path)).then((generators) => this.selectGenerator(generators));
+        Generator.getPath(this.path, this.options).then((path) => this.loadEnvironment(path)).then((generators) => this.selectGenerator(generators));
     }
 
     private selectGenerator(generators: { displayName: string; name: string; }[]) {
@@ -182,10 +202,10 @@ class Generator {
             this.generators = this.getMetadata().then(metadata => {
                 var generators = metadata
                     .map(z => ({
-                    displayName: z.namespace.replace(":app", "").replace(/:/g, ' '),
-                    name: z.namespace,
-                    resolved: z.resolved
-                }));
+                        displayName: z.namespace.replace(":app", "").replace(/:/g, ' '),
+                        name: z.namespace,
+                        resolved: z.resolved
+                    }));
 
                 if (this.prefix) {
                     generators = generators.filter(z => _.startsWith(z.name, this.prefix));
@@ -200,7 +220,8 @@ class Generator {
 
     public run(generator: string, path?: string) {
         if (!path) {
-            this.getPath().then(p => this.run(generator, p));
+            Generator.getPath(this.path, this.options)
+                .then(p => this.run(generator, p));
             return;
         }
 
@@ -220,8 +241,8 @@ class Generator {
                             message: def + " name?",
                             default: def
                         }, (value) => {
-                                this.runGenerator(generator + ' ' + value, path);
-                            });
+                            this.runGenerator(generator + ' ' + value, path);
+                        });
                         view.show();
                     }
                 }
@@ -235,14 +256,14 @@ class Generator {
                 process.chdir(this.startPath);
                 // TODO: Find out what directory was created and open a newinstance there.
                 //if (_.endsWith(generator, ":app")) {
-                //    atom.open({ pathsToOpen: [path.join(this.path, this.adapter.answers['name'])] });
+                //    atom.open({ pathsToOpen: [join(this.path, this.adapter.answers['name'])] });
                 //}
             });
         });
     }
 
     private getPackagePath(resolved: string) {
-        var pieces = resolved.split(path.sep);
+        var pieces = resolved.split(sep);
         var results = [];
 
         while (pieces.length) {
@@ -255,7 +276,7 @@ class Generator {
             }
         }
 
-        return results.join(path.sep);
+        return results.join(sep);
     }
 
     private getMetadata() {
@@ -264,12 +285,12 @@ class Generator {
         })
             .then(() => this.env.getGeneratorsMeta())
             .then((metadata) => _.map(metadata, (item: { namespace: string; resolved: string; }) => {
-            return {
-                namespace: item.namespace,
-                resolved: item.resolved,
-                package: this.getPackagePath(item.resolved)
-            };
-        }));
+                return {
+                    namespace: item.namespace,
+                    resolved: item.resolved,
+                    package: this.getPackagePath(item.resolved)
+                };
+            }));
         return result;
     }
 }

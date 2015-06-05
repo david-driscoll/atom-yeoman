@@ -19,6 +19,10 @@ class Bootstrapper {
     public deactivate() {
         atomYeoman.deactivate();
     }
+
+    public config = {
+        
+    }
 }
 
 var instance = new Bootstrapper;

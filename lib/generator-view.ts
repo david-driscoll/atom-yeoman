@@ -13,8 +13,6 @@ class GeneratorView extends spacePen.SelectListView {
 
     constructor(private _items: { displayName: string; name: string; }[], private invokeNext: (result: any) => void) {
         super();
-        //this.buildGenerators();
-        //_model.onGeneratorsUpdated(() => this.buildGenerators());
     }
 
     public static content() {

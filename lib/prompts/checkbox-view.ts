@@ -346,7 +346,7 @@ class CheckboxView extends spacePen.View {
         var populateCallback;
         clearTimeout(this.scheduleTimeout);
         populateCallback = () => {
-            if (this.isOnDom()) {
+            if ((<any>this).isOnDom()) {
                 return this.populateList();
             }
         };
