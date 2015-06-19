@@ -5,47 +5,53 @@ var loophole = require("loophole");
 // Loophole the loophole...
 loophole.Function.prototype = Function.prototype;
 var Environment = (function() {
-    var path = require('path');
+    var referencingPackages: Atom.Package[];
+    loophole.allowUnsafeNewFunction(() => {
+        var template = require('lodash/string/template');
+        var path = require('path');
 
-    var referencingPackages = _(atom.packages.getLoadedPackages()).filter(package => {
-        var providedServices = package.metadata && package.metadata.providedServices;
-        if (providedServices && !!providedServices['yeoman-environment']) {
-            return true;
-        }
+        referencingPackages = _(atom.packages.getLoadedPackages())
+            .filter(package => {
+                var providedServices = package.metadata && package.metadata.providedServices;
+                if (providedServices && !!providedServices['yeoman-environment']) {
+                    return true;
+                }
 
-        var consumedServices = package.metadata && package.metadata.consumedServices;
-        if (consumedServices && !!consumedServices['yeoman-environment']) {
-            return true;
-        }
-    })
-    .value();
+                var consumedServices = package.metadata && package.metadata.consumedServices;
+                if (consumedServices && !!consumedServices['yeoman-environment']) {
+                    return true;
+                }
+            })
+            .value();
 
-    var paths = _(referencingPackages).map(package => {
-        var packagePath = package.path;
-        var lstat = fs.lstatSync(packagePath);
-        if (lstat && lstat.isSymbolicLink()) {
-            packagePath = fs.readlinkSync(packagePath);
-        }
+        var paths = _(referencingPackages)
+            .map(package => {
+                var packagePath = package.path;
+                var lstat = fs.lstatSync(packagePath);
+                if (lstat && lstat.isSymbolicLink()) {
+                    packagePath = fs.readlinkSync(packagePath);
+                }
 
-        return [
-            join(packagePath, 'node_modules/lodash/index.js'),
-            join(packagePath, 'node_modules/dist/lodash.js')
-        ];
-    })
-    .flatten<string>()
-    .value();
+                return [
+                    join(packagePath, 'node_modules/lodash/index.js'),
+                    join(packagePath, 'node_modules/dist/lodash.js')
+                ];
+            })
+            .flatten<string>()
+            .value();
 
-    paths = _(require.cache).keys().filter(z => _.contains(z, "babel-core") && _.contains(z, 'lodash')).value().concat(paths);
+        paths = _(require.cache).keys().filter(z => _.contains(z, "babel-core") && _.contains(z, 'lodash')).value().concat(paths);
 
-    // Dirty hack
-    // Replace any references to lodash (in referencing packages only)
-    // without safe lodash version.
-    _.each(paths, path => {
-        var m = require.cache[path];
-        if (require.cache[path]) {
-            m.exports.template = _.template;
-            //m.exports = _;
-        }
+        // Dirty hack
+        // Replace any references to lodash (in referencing packages only)
+        // without safe lodash version.
+        _.each(paths, path => {
+            var m = require.cache[path];
+            if (require.cache[path]) {
+                m.exports.template = template;
+                //m.exports = _;
+            }
+        });
     });
 
     var res;
