@@ -17,29 +17,35 @@ var Environment = (function() {
         if (consumedServices && !!consumedServices['yeoman-environment']) {
             return true;
         }
-    }).value();
+    })
+    .value();
+
+    var paths = _(referencingPackages).map(package => {
+        var packagePath = package.path;
+        var lstat = fs.lstatSync(packagePath);
+        if (lstat && lstat.isSymbolicLink()) {
+            packagePath = fs.readlinkSync(packagePath);
+        }
+
+        return [
+            join(packagePath, 'node_modules/lodash/index.js'),
+            join(packagePath, 'node_modules/dist/lodash.js')
+        ];
+    })
+    .flatten<string>()
+    .value();
+
+    paths = _(require.cache).keys().filter(z => _.contains(z, "babel-core") && _.contains(z, 'lodash')).value().concat(paths);
 
     // Dirty hack
     // Replace any references to lodash (in referencing packages only)
     // without safe lodash version.
-    _.map(referencingPackages, package => {
-        var packagePath = package.path;
-        if (fs.lstatSync(packagePath)) {
-            packagePath = fs.readlinkSync(packagePath);
+    _.each(paths, path => {
+        var m = require.cache[path];
+        if (require.cache[path]) {
+            m.exports.template = _.template;
+            //m.exports = _;
         }
-
-        var paths = [
-            join(packagePath, 'node_modules/lodash/index.js'),
-            join(packagePath, 'node_modules/dist/lodash.js')
-        ];
-
-        _.each(paths, path => {
-            var m = require.cache[path];
-            if (require.cache[path]) {
-                m.exports.template = _.template;
-                //m.exports = _;
-            }
-        })
     });
 
     var res;
@@ -63,7 +69,7 @@ var Environment = (function() {
             paths.push(path.join(process.env.APPDATA, 'npm/node_modules'));
         } else {
             paths.push('/usr/lib/node_modules');
-            paths.push('/usr/local/lib/node_modules/');
+            paths.push('/usr/local/lib/node_modules');
         }
 
         return paths;
