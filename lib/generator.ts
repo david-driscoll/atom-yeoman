@@ -11,13 +11,13 @@ var Environment = (function() {
         var path = require('path');
 
         referencingPackages = _(atom.packages.getLoadedPackages())
-            .filter(package => {
-                var providedServices = package.metadata && package.metadata.providedServices;
+            .filter(pack => {
+                var providedServices = pack.metadata && pack.metadata.providedServices;
                 if (providedServices && !!providedServices['yeoman-environment']) {
                     return true;
                 }
 
-                var consumedServices = package.metadata && package.metadata.consumedServices;
+                var consumedServices = pack.metadata && pack.metadata.consumedServices;
                 if (consumedServices && !!consumedServices['yeoman-environment']) {
                     return true;
                 }
@@ -25,8 +25,8 @@ var Environment = (function() {
             .value();
 
         var paths = _(referencingPackages)
-            .map(package => {
-                var packagePath = package.path;
+            .map(pack => {
+                var packagePath = pack.path;
                 var lstat = fs.lstatSync(packagePath);
                 if (lstat && lstat.isSymbolicLink()) {
                     packagePath = fs.readlinkSync(packagePath);
@@ -196,7 +196,7 @@ class Generator {
     }
 
     private selectPath() {
-        Generator.getPath(this.path, this.options).then((path) => this.loadEnvironment(path)).then((generators) => this.selectGenerator(generators));
+        Generator.getPath(this.path, this.options).then((path) => this.listGenerators(path)).then((generators) => this.selectGenerator(generators));
     }
 
     private selectGenerator(generators: { displayName: string; name: string; }[]) {
@@ -205,7 +205,12 @@ class Generator {
         view.toggle();
     }
 
-    private loadEnvironment(path: string) {
+    public listGenerators(path: string) {
+        if (!path) {
+            return Generator.getPath(this.path, this.options)
+                .then(path => this.listGenerators(path));
+        }
+
         if (!this.env) {
             process.chdir(path);
             this.path = path;
@@ -232,12 +237,11 @@ class Generator {
 
     public run(generator: string, path?: string) {
         if (!path) {
-            Generator.getPath(this.path, this.options)
-                .then(p => this.run(generator, p));
-            return;
+            return Generator.getPath(this.path, this.options)
+                .then(path => this.run(generator, path));
         }
 
-        this.loadEnvironment(path).then((generators) => {
+        this.listGenerators(path).then((generators) => {
             loophole.allowUnsafeNewFunction(() => {
                 process.chdir(path);
                 try {
