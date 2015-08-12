@@ -133,7 +133,6 @@ class Generator {
         return new Promise<string>((resolve, reject) => {
             if (p) return resolve(<any>p);
 
-
             var directories = [];
             var selectedTreeViewDirectory = this.getTreeViewDirectory();
             if (selectedTreeViewDirectory)
@@ -180,10 +179,14 @@ class Generator {
         var treeView = this.getTreeView();
         if (treeView === null || !treeView.length) return;
 
-        if (extname(treeView[0].item.selectedPath) !== "")
-            return dirname(treeView[0].item.selectedPath);
+        var dn = treeView[0].item.selectedPath;
+        if (extname(treeView[0].item.selectedPath) !== "") {
+            dn = dirname(treeView[0].item.selectedPath);
+        }
 
-        return treeView[0].item.selectedPath;
+        var stats = fs.statSync(dn);
+        if (stats && stats.isDirectory())
+            return dn;
     }
 
     // Holy hell this is hacky. Is there a better way to get the TreeView?
