@@ -1,7 +1,7 @@
 {
   "name": "atom-yeoman",
   "main": "./lib/bootstrapper",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "description": "Yeoman Adapter for Atom.io",
   "repository": "https://github.com/david-driscoll/atom-yeoman",
   "license": "MIT",
