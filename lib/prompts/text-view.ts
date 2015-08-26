@@ -47,7 +47,7 @@ export class TextView extends spacePen.View {
         this.message.text(this.question.message);
 
         this.panel.show();
-        this.miniEditor.setText(this.question.default);
+        this.miniEditor.setText(this.question.default || "");
         this.miniEditor.focus();
         var textEditor : Atom.TextEditor = <any>this.miniEditor.getModel();
         textEditor.selectAll();
