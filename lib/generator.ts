@@ -126,7 +126,7 @@ class Generator {
     }
 
     public start() {
-        this.selectPath();
+        return this.selectPath();
     }
 
     private static getPath(p: string, options: IOptions) {
@@ -199,16 +199,20 @@ class Generator {
     }
 
     private selectPath() {
-        Generator.getPath(this.path, this.options).then((path) => this.listGenerators(path)).then((generators) => this.selectGenerator(generators));
+        return Generator.getPath(this.path, this.options)
+            .then((path) => this.listGenerators(path))
+            .then((generators) => this.selectGenerator(generators));
     }
 
     private selectGenerator(generators: { displayName: string; name: string; }[]) {
-        var view = new GeneratorView(generators, (result) => this.run(result, this.path));
-        view.message.text('Generator');
-        view.toggle();
+        return new Promise<IMessages>((resolve) => {
+            var view = new GeneratorView(generators, (result) => this.run(result, this.path).then(<any>resolve));
+            view.message.text('Generator');
+            view.toggle();
+        });
     }
 
-    public listGenerators(path: string) {
+    public listGenerators(path: string): Promise<any> {
         if (!path) {
             return Generator.getPath(this.path, this.options)
                 .then(path => this.listGenerators(path));
@@ -238,45 +242,45 @@ class Generator {
         return this.generators;
     }
 
-    public run(generator: string, path?: string) {
+    public run(generator: string, path?: string) : Promise<IMessages> {
         if (!path) {
             return Generator.getPath(this.path, this.options)
                 .then(path => this.run(generator, path));
         }
 
-        this.listGenerators(path).then((generators) => {
-            loophole.allowUnsafeNewFunction(() => {
-                process.chdir(path);
-                try {
-                    this.runGenerator(generator, path);
-                } catch (error) {
-                    // Tried to do class detection... that was unreliable across all use cases.
-                    // this isn't the best, but it works.
-                    if (error.message === "Did not provide required argument name!") {
-                        var def = _.last(generator.split(':'))
-                        var view = new TextViews.TextView({
-                            name: 'name',
-                            type: undefined,
-                            message: def + " name?",
-                            default: def
-                        }, (value) => {
-                            this.runGenerator(generator + ' ' + value, path);
-                        });
-                        view.show();
+        return this.listGenerators(path).then((generators) => {
+            return new Promise<IMessages>((resolve) => {
+                loophole.allowUnsafeNewFunction(() => {
+                    process.chdir(path);
+                    try {
+                        this.runGenerator(generator, path, resolve);
+                    } catch (error) {
+                        // Tried to do class detection... that was unreliable across all use cases.
+                        // this isn't the best, but it works.
+                        if (error.message === "Did not provide required argument name!") {
+                            var def = _.last(generator.split(':'))
+                            var view = new TextViews.TextView({
+                                name: 'name',
+                                type: undefined,
+                                message: def + " name?",
+                                default: def
+                            }, (value) => {
+                                this.runGenerator(generator + ' ' + value, path, resolve);
+                            });
+                            view.show();
+                        }
                     }
-                }
+                });
             });
         })
     }
 
-    private runGenerator(args: string, path: string) {
+    private runGenerator(args: string, path: string, resolve: (value: any) => void) {
         loophole.allowUnsafeNewFunction(() => {
             var genny = this.env.run(args, { cwd: path }, () => {
+                this.adapter.messages.cwd = process.cwd();
                 process.chdir(this.startPath);
-                // TODO: Find out what directory was created and open a newinstance there.
-                //if (_.endsWith(generator, ":app")) {
-                //    atom.open({ pathsToOpen: [join(this.path, this.adapter.answers['name'])] });
-                //}
+                resolve(<any>this.adapter.messages);
             });
         });
     }

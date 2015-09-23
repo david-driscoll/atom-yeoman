@@ -47,6 +47,8 @@ class AtomAdapter {
     }
 
     public log = logger();
+
+    public messages: IMessages = this.log.messages;
 }
 
 export = AtomAdapter;

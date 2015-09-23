@@ -17,3 +17,14 @@
 /// <reference path="typingsTemp/space-pen/space-pen.d.ts" />
 /// <reference path="typingsTemp/status-bar/status-bar.d.ts" />
 /// <reference path="typingsTemp/text-buffer/text-buffer.d.ts" />
+
+interface IMessages {
+    cwd?: string;
+    skip: string[];
+    force: string[];
+    create: string[];
+    invoke: string[];
+    conflict: string[];
+    identical: string[];
+    info: string[];
+}

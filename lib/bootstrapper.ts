@@ -21,7 +21,7 @@ class Bootstrapper {
     }
 
     public config = {
-        
+
     }
 }
 
