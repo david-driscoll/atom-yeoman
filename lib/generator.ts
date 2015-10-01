@@ -2,11 +2,14 @@ import _ = require('./lodash');
 import {join, relative, extname, dirname, sep} from 'path';
 import fs = require('fs');
 var loophole = require("loophole");
+function allowUnsafe(fn: Function) {
+    return loophole.allowUnsafeEval(() => loophole.allowUnsafeNewFunction(() => fn()));
+}
 // Loophole the loophole...
 loophole.Function.prototype = Function.prototype;
 var Environment = (function() {
     var referencingPackages: Atom.Package[];
-    loophole.allowUnsafeNewFunction(() => {
+    allowUnsafe(() => {
         var template = require('lodash/string/template');
         var path = require('path');
 
@@ -55,7 +58,7 @@ var Environment = (function() {
     });
 
     var res;
-    loophole.allowUnsafeNewFunction(() => {
+    allowUnsafe(() => {
         res = require('yeoman-environment');
         require('yeoman-generator');
     });
@@ -91,7 +94,7 @@ var Environment = (function() {
                 options.cwd = this.cwd;
             }
         }
-        loophole.allowUnsafeNewFunction(() => result = defaultCreate.apply(this, args));
+        allowUnsafe(() => result = defaultCreate.apply(this, args));
         return result;
     };
 
@@ -250,7 +253,7 @@ class Generator {
 
         return this.listGenerators(path).then((generators) => {
             return new Promise<IMessages>((resolve) => {
-                loophole.allowUnsafeNewFunction(() => {
+                allowUnsafe(() => {
                     process.chdir(path);
                     try {
                         this.runGenerator(generator, path, resolve);
@@ -276,7 +279,7 @@ class Generator {
     }
 
     private runGenerator(args: string, path: string, resolve: (value: any) => void) {
-        loophole.allowUnsafeNewFunction(() => {
+        allowUnsafe(() => {
             var genny = this.env.run(args, { cwd: path }, () => {
                 this.adapter.messages.cwd = process.cwd();
                 process.chdir(this.startPath);
