@@ -20,7 +20,7 @@
     "gulp": "^3.9.0",
     "gulp-util": "^3.0.6",
     "jquery": "^2.1.4",
-    "lodash": "^3.10.0",
+    "lodash": "^4.17.20",
     "loophole": "^1.0.0",
     "merge-stream": "^0.1.8",
     "semver": "^5.0.0",
