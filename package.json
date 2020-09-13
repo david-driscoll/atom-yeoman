@@ -19,7 +19,7 @@
     "event-kit": "^1.2.0",
     "gulp": "^3.9.0",
     "gulp-util": "^3.0.6",
-    "jquery": "^2.1.4",
+    "jquery": "^3.5.1",
     "lodash": "^3.10.0",
     "loophole": "^1.0.0",
     "merge-stream": "^0.1.8",
